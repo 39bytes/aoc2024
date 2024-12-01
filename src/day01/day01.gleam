@@ -7,17 +7,16 @@ import simplifile
 
 fn parse() -> Result(#(List(Int), List(Int)), _) {
   use contents <- result.try(simplifile.read("src/day01/input"))
-  Ok(
-    contents
-    |> string.split("\n")
-    |> list.filter(fn(s) { !string.is_empty(s) })
-    |> list.map(fn(s) {
-      let assert Ok([a, b]) =
-        string.split(s, "   ") |> list.map(int.parse) |> result.all
-      #(a, b)
-    })
-    |> list.unzip,
-  )
+  contents
+  |> string.split("\n")
+  |> list.filter(fn(s) { !string.is_empty(s) })
+  |> list.map(fn(s) {
+    let assert Ok([a, b]) =
+      string.split(s, "   ") |> list.map(int.parse) |> result.all
+    #(a, b)
+  })
+  |> list.unzip
+  |> Ok
 }
 
 fn part1(xs: List(Int), ys: List(Int)) {
