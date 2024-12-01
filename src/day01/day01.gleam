@@ -5,7 +5,7 @@ import gleam/result
 import gleam/string
 import simplifile
 
-fn parse() -> Result(#(List(Int), List(Int)), simplifile.FileError) {
+fn parse() -> Result(#(List(Int), List(Int)), _) {
   use contents <- result.try(simplifile.read("src/day01/input"))
   Ok(
     contents
@@ -29,12 +29,14 @@ fn part1(xs: List(Int), ys: List(Int)) {
 }
 
 fn part2(xs: List(Int), ys: List(Int)) {
-  xs |> list.map(fn(x) { x * list.count(ys, fn(y) { y == x }) }) |> int.sum
+  xs
+  |> list.map(fn(x) { x * list.count(ys, fn(y) { y == x }) })
+  |> int.sum
 }
 
 pub fn main() {
   let assert Ok(#(xs, ys)) = parse()
 
   io.println("Part 1: " <> int.to_string(part1(xs, ys)))
-  io.println("Part 1: " <> int.to_string(part2(xs, ys)))
+  io.println("Part 2: " <> int.to_string(part2(xs, ys)))
 }

@@ -5,7 +5,7 @@ import gleam/result
 import gleam/string
 import simplifile
 
-fn parse() -> Result(String, simplifile.FileError) {
+fn parse() -> Result(String, _) {
   use contents <- result.try(simplifile.read("src/day<num>/input"))
   Ok(contents)
 }
