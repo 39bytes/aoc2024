@@ -1,5 +1,5 @@
 run num:
-    gleam run -m day01/day{{num}}
+    gleam run -m day{{num}}/day{{num}}
 
 new num:
     mkdir src/day{{num}}
