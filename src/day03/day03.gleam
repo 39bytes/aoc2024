@@ -37,9 +37,7 @@ fn parse(
 ) -> List(Instruction) {
   regexp.scan(pattern, contents)
   |> list.filter_map(fn(match) {
-    io.debug(match)
     case match.submatches {
-      // Do
       [Some(_)] -> Ok(Do)
       [None, Some(_)] -> Ok(Dont)
       [None, None, Some(s)] -> parse_mul(s, mul_pattern)
@@ -52,7 +50,6 @@ fn parse_mul(s: String, pattern: regexp.Regexp) -> Result(Instruction, Nil) {
   use nums <- result.try(
     regexp.scan(pattern, s)
     |> list.map(fn(match) {
-      io.debug(match)
       match.submatches
       |> option.all
       |> option.to_result(Nil)
