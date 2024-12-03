@@ -53,7 +53,7 @@ fn parse_mul(s: String, pattern: regexp.Regexp) -> Result(Instruction, Nil) {
       match.submatches
       |> option.all
       |> option.to_result(Nil)
-      |> result.map(fn(submatches) { submatches |> list.filter_map(int.parse) })
+      |> result.map(list.filter_map(_, int.parse))
     })
     |> result.all,
   )
