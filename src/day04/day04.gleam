@@ -3,22 +3,15 @@ import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
-import glearray.{type Array, get}
+import glearray.{type Array}
+import lib.{dirs8, equals, get2, grid_coords, to_char_grid}
 import simplifile
 
 fn parse() -> Result(Array(Array(String)), _) {
   use contents <- result.try(simplifile.read("src/day04/input"))
   contents
-  |> string.trim
-  |> string.split("\n")
-  |> list.map(fn(s) { s |> string.to_graphemes |> glearray.from_list })
-  |> glearray.from_list
+  |> to_char_grid
   |> Ok
-}
-
-fn get2(array: Array(Array(a)), coord: #(Int, Int)) -> Result(a, Nil) {
-  use row <- result.try(get(array, coord.0))
-  get(row, coord.1)
 }
 
 fn get_string(coords: List(#(Int, Int)), array: Array(Array(String))) -> String {
@@ -40,10 +33,6 @@ fn string_along_dir(
   |> get_string(array)
 }
 
-const dirs = [
-  #(1, 0), #(-1, 0), #(0, 1), #(0, -1), #(1, -1), #(-1, -1), #(1, 1), #(-1, 1),
-]
-
 fn dimensions(grid: Array(Array(a))) -> #(Int, Int) {
   let height = glearray.length(grid)
   let width =
@@ -52,21 +41,16 @@ fn dimensions(grid: Array(Array(a))) -> #(Int, Int) {
   #(width, height)
 }
 
-fn grid_coords(width: Int, height: Int) {
-  use i <- list.flat_map(list.range(0, height - 1))
-  list.zip(list.repeat(i, width), list.range(0, width - 1))
-}
-
 fn part1(grid: Array(Array(String))) {
   let #(width, height) = dimensions(grid)
 
   let strs = {
     use #(i, j) <- list.flat_map(grid_coords(width, height))
-    use dir <- list.map(dirs)
+    use dir <- list.map(dirs8)
     string_along_dir(grid, i, j, dir)
   }
 
-  strs |> list.filter(fn(s) { s == "XMAS" }) |> list.length
+  strs |> list.count(equals("XMAS"))
 }
 
 fn has_x(grid: Array(Array(String)), coord: #(Int, Int)) -> Bool {
@@ -82,7 +66,7 @@ fn has_x(grid: Array(Array(String)), coord: #(Int, Int)) -> Bool {
 
 fn part2(grid: Array(Array(String))) {
   let #(width, height) = dimensions(grid)
-  grid_coords(width, height) |> list.filter(has_x(grid, _)) |> list.length
+  grid_coords(width, height) |> list.count(has_x(grid, _))
 }
 
 pub fn main() {
