@@ -46,10 +46,8 @@ const dirs = [
 
 fn dimensions(grid: Array(Array(a))) -> #(Int, Int) {
   let height = glearray.length(grid)
-  let width = {
-    let assert Ok(row) = glearray.get(grid, 0)
-    glearray.length(row)
-  }
+  let width =
+    glearray.get(grid, 0) |> result.unwrap(glearray.new()) |> glearray.length
 
   #(width, height)
 }
