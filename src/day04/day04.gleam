@@ -3,26 +3,26 @@ import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
-import glearray.{type Array}
-import lib.{dirs8, equals, get2, grid_coords, to_char_grid}
+import lib/function.{equals}
+import lib/grid.{type Grid, type Point}
 import simplifile
 
-fn parse() -> Result(Array(Array(String)), _) {
+fn parse() -> Result(Grid(String), _) {
   use contents <- result.try(simplifile.read("src/day04/input"))
   contents
-  |> to_char_grid
+  |> grid.to_char_grid
   |> Ok
 }
 
-fn get_string(coords: List(#(Int, Int)), array: Array(Array(String))) -> String {
-  coords |> list.filter_map(get2(array, _)) |> string.join("")
+fn get_string(coords: List(Point), array: Grid(String)) -> String {
+  coords |> list.filter_map(grid.get2(array, _)) |> string.join("")
 }
 
 fn string_along_dir(
-  array: Array(Array(String)),
+  array: Grid(String),
   i: Int,
   j: Int,
-  direction: #(Int, Int),
+  direction: Point,
 ) -> String {
   [
     #(i, j),
@@ -33,27 +33,19 @@ fn string_along_dir(
   |> get_string(array)
 }
 
-fn dimensions(grid: Array(Array(a))) -> #(Int, Int) {
-  let height = glearray.length(grid)
-  let width =
-    glearray.get(grid, 0) |> result.unwrap(glearray.new()) |> glearray.length
-
-  #(width, height)
-}
-
-fn part1(grid: Array(Array(String))) {
-  let #(width, height) = dimensions(grid)
+fn part1(grid: Grid(String)) {
+  let #(width, height) = grid.dimensions(grid)
 
   let strs = {
-    use #(i, j) <- list.flat_map(grid_coords(width, height))
-    use dir <- list.map(dirs8)
+    use #(i, j) <- list.flat_map(grid.coords(width, height))
+    use dir <- list.map(grid.dirs8)
     string_along_dir(grid, i, j, dir)
   }
 
   strs |> list.count(equals("XMAS"))
 }
 
-fn has_x(grid: Array(Array(String)), coord: #(Int, Int)) -> Bool {
+fn has_x(grid: Grid(String), coord: Point) -> Bool {
   let bwd =
     [#(coord.0 - 1, coord.1 - 1), coord, #(coord.0 + 1, coord.1 + 1)]
     |> get_string(grid)
@@ -64,9 +56,9 @@ fn has_x(grid: Array(Array(String)), coord: #(Int, Int)) -> Bool {
   { fwd == "MAS" || fwd == "SAM" } && { bwd == "MAS" || bwd == "SAM" }
 }
 
-fn part2(grid: Array(Array(String))) {
-  let #(width, height) = dimensions(grid)
-  grid_coords(width, height) |> list.count(has_x(grid, _))
+fn part2(grid: Grid(String)) {
+  let #(width, height) = grid.dimensions(grid)
+  grid.coords(width, height) |> list.count(has_x(grid, _))
 }
 
 pub fn main() {
