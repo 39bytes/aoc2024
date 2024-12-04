@@ -25,7 +25,7 @@ fn get_string(coords: List(#(Int, Int)), array: Array(Array(String))) -> String 
   coords |> list.filter_map(get2(array, _)) |> string.join("")
 }
 
-fn read_in_dir(
+fn string_along_dir(
   array: Array(Array(String)),
   i: Int,
   j: Int,
@@ -65,7 +65,7 @@ fn part1(grid: Array(Array(String))) {
   let strs = {
     use #(i, j) <- list.flat_map(grid_coords(width, height))
     use dir <- list.map(dirs)
-    read_in_dir(grid, i, j, dir)
+    string_along_dir(grid, i, j, dir)
   }
 
   strs |> list.filter(fn(s) { s == "XMAS" }) |> list.length
