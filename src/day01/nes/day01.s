@@ -1,38 +1,8 @@
-.segment "ZEROPAGE"
-; Temp registers - volatile
-t1: .res 1
-t2: .res 1
-t3: .res 1
-t4: .res 1
-t1_16: .res 2
-t2_16: .res 2
-t1_24: .res 3
-t2_24: .res 3
-
-; Parameter registers - volatile
-p1_24:
-  p1_16:
-    p1: .res 1
-    p2: .res 1
-  p2_16:
-    p3: .res 1
-p2_24:
-    p4: .res 1
-    p5: .res 1
-    p6: .res 1
-
-; Return registers - volatile
-r1_24:
-  r1_16:
-    r1: .res 1
-    r2: .res 1
-    r3: .res 1
-
-ptr1: .res 2
-ptr2: .res 2
-
 NUMS_LEN = 1000
 NUMS_PAGES = 12
+
+.segment "ZEROPAGE"
+  answer: .res 4 ; Answer fits in a 32 bit int
 
 .segment "BSS"
   ; Input number lists have 1000 numbers, each 3 bytes long
@@ -87,6 +57,34 @@ NUMS_PAGES = 12
   MOVE16 p2_16, second
   jsr cmp16
 .endmacro
+
+str_loading_input: .asciiz "Loading input"
+str_sorting_first: .asciiz "Sorting first.."
+str_sorting_second: .asciiz "Sorting second.."
+str_calculating: .asciiz "Calculating.."
+
+run_part1:
+  DRAW_STRING str_loading_input, 1, 1
+  jsr ppu_update
+  jsr copy_input_to_ram
+  
+  DRAW_STRING str_sorting_first, 1, 2
+  jsr ppu_update
+  LOAD16 ptr1, #<nums1, #>nums1
+  jsr insertion_sort
+
+  DRAW_STRING str_sorting_second, 1, 3
+  jsr ppu_update
+  LOAD16 ptr1, #<nums2, #>nums2
+  jsr insertion_sort
+
+  DRAW_STRING str_calculating, 1, 4
+  jsr ppu_update
+  jsr calculate_answer
+
+@loop:
+  jmp @loop
+
 
 copy_input_to_ram:
   COPY_PAGES nums1, input_left, NUMS_PAGES
@@ -155,6 +153,73 @@ insertion_sort:
 @done_inner:
   ADD16 ptr1, ptr1, $0003
   jmp @outer
+
+@done:
+  rts
+
+calculate_answer:
+  @end = t1_16
+
+  LOAD16 ptr1, #<nums1, #>nums1
+  LOAD16 ptr2, #<nums2, #>nums2
+  ; nums1 and nums2 are contiguous in memory,
+  ; so we know we're done when ptr1 hits the start of nums2.
+  MOVE16 @end, ptr2
+
+  ldy #0
+
+@loop:
+  CMP16 ptr1, @end ; while ptr1 < end
+  bcc :+
+    jmp @done
+  :
+
+  ; Load nums1[i] and nums2[i]
+  ldy #0
+  MOVE p1_24, {(ptr1), Y}
+  MOVE p2_24, {(ptr2), Y}
+  iny
+  MOVE p1_24+1, {(ptr1), Y}
+  MOVE p2_24+1, {(ptr2), Y}
+  iny
+  MOVE p1_24+2, {(ptr1), Y}
+  MOVE p2_24+2, {(ptr2), Y}
+
+  jsr cmp24 
+  ; if nums1[i] >= nums2[i], then compute nums1[i] - nums2[i]
+  bcc @less
+    jsr sub24
+    jmp @after
+@less:
+    ; otherwise compute nums2[i] - nums1[i]
+    ; so we need to swap the two first
+    MOVE24 t1_24, p1_24
+    MOVE24 p1_24, p2_24
+    MOVE24 p2_24, t1_24
+    jsr sub24
+@after:
+  ; add the result to the answer 
+  clc
+  ; Add byte 0
+  lda answer
+  adc r1_24
+  sta answer
+  ; Add byte 1
+  lda answer+1
+  adc r1_24+1
+  sta answer+1
+  ; Add byte 2
+  lda answer+2
+  adc r1_24+2
+  sta answer+2
+  ; Add potential carry
+  lda answer+3
+  adc #0
+  sta answer+3
+
+  ADD16 ptr1, ptr1, $0003
+  ADD16 ptr2, ptr2, $0003
+  jmp @loop
 
 @done:
   rts

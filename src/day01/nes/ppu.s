@@ -7,7 +7,7 @@
 
 ; Makes the background all black.
 ; Rendering must be turned off before this is called.
-.proc clear_background
+clear_background:
   lda PPUSTATUS ; clear write latch
 
   ; Set base address for the first nametable
@@ -25,7 +25,6 @@
     bne :--
 
   rts
-.endproc
 
 ; Turn off the PPU rendering for manual nametable updates
 ; Clobbers A
@@ -108,4 +107,86 @@ ppu_update_tile:
   ldx #tile_x
   ldy #tile_y
   jsr ppu_update_tile
+.endmacro
+
+; Set tile at X/Y to A immediately
+; Must be used with rendering off
+;  Y =  0- 31 nametable $2000
+;  Y = 32- 63 nametable $2400
+;  Y = 64- 95 nametable $2800
+;  Y = 96-127 nametable $2C00
+; Preserves A, X, Y
+.proc ppu_set_tile 
+  sta t1 ; Preserve registers
+  stx t2
+  sty t3
+
+  lda PPUSTATUS ; reset latch
+  ; The address is gonna have the form 0010 NNYY YYYX XXXX
+  ; Compute high byte
+  tya           
+  lsr
+  lsr
+  lsr
+  ora #$20 
+  sta PPUADDR
+  ; Compute low byte
+  tya
+  asl
+  asl
+  asl
+  asl
+  asl
+  sta t4
+  txa 
+  ora t4
+  sta PPUADDR
+  ; Write the tile ID
+  lda t1
+  sta PPUDATA
+  
+  ldx t2 ; Restore registers
+  ldy t3
+  rts
+.endproc
+
+; Draws a null terminated string beginning at X, Y
+; ---Parameters---
+; ptr - Address of null terminated string
+; X - Tile X
+; Y - Tile Y
+.proc draw_string
+  ; Push saved registers
+  PUSH s1
+  PUSH s2
+  
+  tile_y = s1
+  sty tile_y
+
+  ldy #0
+@loop:
+  lda (ptr1), Y ; while (str[y] != '\0')
+  beq @loop_end
+  sty s2     ; Preserve the y index
+  ldy tile_y
+  jsr ppu_update_tile
+  ldy s2
+  
+  inx        ; x++
+  iny        ; y++
+  jmp @loop
+@loop_end:
+  ; Restore registers
+  POP s2
+  POP s1
+  rts
+.endproc
+
+; Draw a string literal at immediate tile coordinates
+.macro DRAW_STRING static_str, tile_x, tile_y
+  MOVE ptr1,     #<static_str ; write low byte
+  MOVE {ptr1+1}, #>static_str ; write high byte
+  ldx #tile_x
+  ldy #tile_y
+  jsr draw_string
 .endmacro

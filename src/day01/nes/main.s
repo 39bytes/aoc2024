@@ -14,6 +14,7 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 .byte $0, $0, $0, $0, $0, $0, $0, $0 ; padding
 
 .segment "TILES"
+  .incbin "bg_tiles.chr"
 
 .segment "VECTORS"
 .addr nmi
@@ -25,13 +26,56 @@ nmi_lock:      .res 1 ; prevents NMI re-entry
 nmi_count:     .res 1 ; is incremented every NMI
 nmi_signal:    .res 1 ; set to 1 to push a PPU frame update, 2 to turn rendering off next NMI
 nt_update_len: .res 1 ; number of bytes in nt_update buffer    
-nt_update: .res 128; nametable update entry buffer for PPU update
+nt_update: .res 160; nametable update entry buffer for PPU update
+
+; Temp registers - volatile
+t1: .res 1
+t2: .res 1
+t3: .res 1
+t4: .res 1
+t1_16: .res 2
+t2_16: .res 2
+t1_24: .res 3
+t2_24: .res 3
+
+; Parameter registers - volatile
+p1_24:
+  p1_16:
+    p1: .res 1
+    p2: .res 1
+  p2_16:
+    p3: .res 1
+p2_24:
+    p4: .res 1
+    p5: .res 1
+    p6: .res 1
+
+; Saved registers - non-volatile
+s1_16:
+  s1: .res 1
+  s2: .res 1
+s2_16:
+  s3: .res 1
+  s4: .res 1
+s5: .res 1
+s6: .res 1
+
+; Return registers - volatile
+r1_24:
+  r1_16:
+    r1: .res 1
+    r2: .res 1
+    r3: .res 1
+
+ptr1: .res 2
+ptr2: .res 2
+
 
 .segment "OAM"
   oam: .res 256
 
-.include "day01.s"
 .include "ppu.s"
+.include "day01.s"
 
 .segment "CODE"
 reset:
@@ -187,7 +231,7 @@ palette:
 
   ; Sprite Palette
   .byte $0f, $10, $20, $30
-  .byte $0f, $32, $22, $00
+  .byte $0f, $00, $00, $00
   .byte $0f, $00, $00, $00
   .byte $0f, $00, $00, $00
 
@@ -201,11 +245,4 @@ main:
   cpx #32
   bne @load_palettes
 
-  jsr copy_input_to_ram
-
-  LOAD16 ptr1, #<nums1, #>nums1
-  jsr insertion_sort
-
-@loop:
-  jsr ppu_update
-  jmp @loop
+  jmp run_part1
