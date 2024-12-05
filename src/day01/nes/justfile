@@ -2,7 +2,7 @@ rom_name := "aoc-day1.nes"
 debug_filename := "debug-symbols.txt"
 
 build:
-    cl65 --verbose --target nes -C config.cfg -o {{rom_name}} -g -Ln {{debug_filename}} main.s 
+    cl65 --verbose --target nes -C config.cfg -o {{rom_name}} -g -Ln {{debug_filename}} day01.s 
     python debug-namelist.py {{rom_name}} {{debug_filename}}
     rm {{debug_filename}}
 
