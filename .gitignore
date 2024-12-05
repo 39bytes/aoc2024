@@ -4,3 +4,9 @@
 erl_crash.dump
 input
 example
+*.o
+*.nes
+*.nes*
+*.fdb
+*.nl
+.DS_Store
