@@ -68,22 +68,20 @@ fn part1(graph: Graph(Int), updates: List(Update)) {
   |> int.sum
 }
 
-fn fix_update(rules: Set(Rule), update: Update) -> Update {
+fn fix_update(graph: Graph(Int), update: Update) -> Update {
   update
   |> list.sort(by: fn(a, b) {
-    case set.contains(rules, #(a, b)) {
+    case dict.get(graph, a) |> result.unwrap(set.new()) |> set.contains(b) {
       True -> order.Lt
       False -> order.Gt
     }
   })
 }
 
-fn part2(graph: Graph(Int), rules: List(Rule), updates: List(Update)) {
-  let rules = set.from_list(rules)
-
+fn part2(graph: Graph(Int), updates: List(Update)) {
   updates
   |> list.filter(not(valid_update(graph, _, set.new())))
-  |> list.map(fix_update(rules, _))
+  |> list.map(fix_update(graph, _))
   |> list.map(middle_element)
   |> int.sum
 }
@@ -108,5 +106,5 @@ pub fn main() {
   let graph = make_graph(rules)
 
   io.println("Part 1: " <> int.to_string(part1(graph, updates)))
-  io.println("Part 2: " <> int.to_string(part2(graph, rules, updates)))
+  io.println("Part 2: " <> int.to_string(part2(graph, updates)))
 }
