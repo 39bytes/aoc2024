@@ -71,9 +71,6 @@ ptr1: .res 2
 ptr2: .res 2
 
 
-.segment "OAM"
-  oam: .res 256
-
 .include "ppu.s"
 .include "day01.s"
 
@@ -97,6 +94,14 @@ reset:
 
 @clear_memory:
   lda #$00
+  sta $0000, X
+  sta $0100, X
+  sta $0200, X
+  sta $0300, X
+  sta $0400, X
+  sta $0500, X
+  sta $0600, X
+  sta $0700, X
   sta $6000, X
   sta $6100, X
   sta $6200, X
@@ -132,18 +137,6 @@ reset:
   inx
   bne @clear_memory
 
-; place all sprites offscreen at Y=255
-  lda #255
-  ldx #0
-@set_sprite:
-  sta oam, X
-  inx
-  inx
-  inx
-  inx
-  bne @set_sprite
-; load default palette
-
 ; second wait for vblank, PPU is ready after this
 @vblankwait2:
   bit PPUSTATUS
@@ -175,11 +168,6 @@ nmi:
     MOVE PPUMASK, #%00000000 ; Disable rendering then exit NMI
     jmp @ppu_update_done
 :
-
-  ; Otherwise the signal must've been PpuSignal::FrameRead
-  ; Upload sprites via OAM DMA
-  MOVE OAMADDR, #0
-  MOVE OAMDMA, #>oam
 
   ; Update the nametables with the buffered tile updates
   ldx #0

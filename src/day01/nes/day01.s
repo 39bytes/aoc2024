@@ -2,7 +2,8 @@ NUMS_LEN = 1000
 NUMS_PAGES = 12
 
 .segment "ZEROPAGE"
-  answer: .res 4 ; Answer fits in a 32 bit int
+  answer: .res 3 ; Answer fits in a 24 bit int
+  answer_bcd: .res 8
 
 .segment "BSS"
   ; Input number lists have 1000 numbers, each 3 bytes long
@@ -52,6 +53,13 @@ NUMS_PAGES = 12
   MOVE16 dest, r1_16
 .endmacro
 
+.macro SUB24 dest, var, imm_lo, imm_mid, imm_hi
+  MOVE24 p1_24, var
+  LOAD24 p2_24, #imm_lo, #imm_mid, imm_hi
+  jsr sub24
+  MOVE24 dest, r1_24
+.endmacro
+
 .macro CMP16 first, second
   MOVE16 p1_16, first
   MOVE16 p2_16, second
@@ -62,12 +70,14 @@ str_loading_input: .asciiz "Loading input"
 str_sorting_first: .asciiz "Sorting first.."
 str_sorting_second: .asciiz "Sorting second.."
 str_calculating: .asciiz "Calculating.."
+str_answer: .asciiz "Answer:"
 
 run_part1:
+  jsr ppu_update
   DRAW_STRING str_loading_input, 1, 1
   jsr ppu_update
   jsr copy_input_to_ram
-  
+
   DRAW_STRING str_sorting_first, 1, 2
   jsr ppu_update
   LOAD16 ptr1, #<nums1, #>nums1
@@ -81,6 +91,15 @@ run_part1:
   DRAW_STRING str_calculating, 1, 4
   jsr ppu_update
   jsr calculate_answer
+  jsr answer_to_decimal
+
+  DRAW_STRING str_answer, 1, 5
+  jsr ppu_update
+  
+  ldx #8
+  ldy #5
+  jsr draw_answer_bcd
+  jsr ppu_update
 
 @loop:
   jmp @loop
@@ -199,6 +218,7 @@ calculate_answer:
     jsr sub24
 @after:
   ; add the result to the answer 
+  ; inlined here to make it faster
   clc
   ; Add byte 0
   lda answer
@@ -212,10 +232,6 @@ calculate_answer:
   lda answer+2
   adc r1_24+2
   sta answer+2
-  ; Add potential carry
-  lda answer+3
-  adc #0
-  sta answer+3
 
   ADD16 ptr1, ptr1, $0003
   ADD16 ptr2, ptr2, $0003
@@ -223,6 +239,140 @@ calculate_answer:
 
 @done:
   rts
+
+; Convert the answer to binary coded decimal.
+.proc answer_to_decimal
+  ldy #'0'
+
+  ten_millions = answer_bcd
+  millions = answer_bcd+1
+  hundred_thousands = answer_bcd+2
+  ten_thousands = answer_bcd+3
+  thousands = answer_bcd+4
+  hundreds = answer_bcd+5
+  tens = answer_bcd+6
+  ones = answer_bcd+7
+
+  sty ten_millions
+  sty millions
+  sty hundred_thousands
+  sty ten_thousands
+  sty thousands
+  sty hundreds
+  sty tens
+  sty ones
+
+@calc_ten_millions:
+  MOVE24 p1_24, answer
+  LOAD24 p2_24, #$80, #$96, #$98 ; 10 mil in hex
+  jsr cmp24
+  bcc @calc_millions
+  jsr sub24
+  MOVE24 answer, r1_24
+  inc ten_millions
+  jmp @calc_ten_millions
+@calc_millions:
+  MOVE24 p1_24, answer
+  LOAD24 p2_24, #$40, #$42, #$0F ; 1 mil in hex
+  jsr cmp24
+  bcc @calc_hundred_thousands
+  jsr sub24
+  MOVE24 answer, r1_24
+  inc millions
+  jmp @calc_millions
+@calc_hundred_thousands:
+  MOVE24 p1_24, answer
+  LOAD24 p2_24, #$A0, #$86, #$01 ; 100000 in hex
+  jsr cmp24
+  bcc @calc_ten_thousands
+  jsr sub24
+  MOVE24 answer, r1_24
+  inc hundred_thousands
+  jmp @calc_hundred_thousands
+@calc_ten_thousands:
+  MOVE24 p1_24, answer
+  LOAD24 p2_24, #$10, #$27, #$00 ; 10000 in hex
+  jsr cmp24
+  bcc @calc_thousands
+  jsr sub24
+  MOVE24 answer, r1_24
+  inc ten_thousands
+  jmp @calc_ten_thousands
+@calc_thousands:
+  MOVE16 p1_16, answer
+  LOAD16 p2_16, #$E8, #$03 ; 1000 in hex
+  jsr cmp16
+  bcc @calc_hundreds
+  jsr sub16
+  MOVE16 answer, r1_16
+  inc thousands
+  jmp @calc_thousands
+@calc_hundreds:
+  MOVE16 p1_16, answer
+  LOAD16 p2_16, #$64, #$00 ; 100 in hex
+  jsr cmp16
+  bcc @calc_tens
+  jsr sub16
+  MOVE16 answer, r1_16
+  inc hundreds
+  jmp @calc_hundreds
+@calc_tens:
+  lda answer
+  cmp #10
+  bcc @calc_ones
+  sbc #10
+  sta answer
+  inc tens
+  jmp @calc_tens
+@calc_ones:
+  lda answer
+  clc
+  adc #'0'
+  sta ones
+
+  rts
+.endproc
+
+
+; Draws answer_bcd.
+; ---Parameters---
+; X - X position of the first digit
+; Y - Y position
+.proc draw_answer_bcd
+  lda answer_bcd
+  jsr ppu_update_tile
+  inx
+
+  lda answer_bcd+1
+  jsr ppu_update_tile
+  inx
+
+  lda answer_bcd+2
+  jsr ppu_update_tile
+  inx
+
+  lda answer_bcd+3
+  jsr ppu_update_tile
+  inx
+
+  lda answer_bcd+4
+  jsr ppu_update_tile
+  inx
+
+  lda answer_bcd+5
+  jsr ppu_update_tile
+  inx
+
+  lda answer_bcd+6
+  jsr ppu_update_tile
+  inx
+  
+  lda answer_bcd+7
+  jsr ppu_update_tile
+  inx
+
+  rts
+.endproc
 
 ; ---------------
 ; Math operations
@@ -248,30 +398,6 @@ add16:
 
   rts
 
-
-; 24 bit addition: B + C
-; Preserves: X, Y
-; ---Parameters---
-; p1_24 - B
-; p2_24 - C
-; ---Returns---
-; r1_24 - Result
-add24:
-  clc
-  ; Add low bytes
-  lda p1_24
-  adc p2_24
-  sta r1_24
-  ; Add middle bytes
-  lda p1_24+1
-  adc p2_24+1
-  sta r1_24+1
-  ; Add high bytes
-  lda p1_24+2
-  adc p2_24+2
-  sta r1_24+2
-
-  rts
 
 ; 16 bit subtraction: B - C
 ; Preserves: X, Y
@@ -362,5 +488,3 @@ cmp24:
   lda p1_24
   cmp p2_24
   rts
-
-
