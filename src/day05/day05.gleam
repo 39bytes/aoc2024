@@ -3,6 +3,7 @@ import gleam/int
 import gleam/io
 import gleam/list
 import gleam/option.{None, Some}
+import gleam/order
 import gleam/result
 import gleam/set.{type Set}
 import gleam/string
@@ -67,35 +68,22 @@ fn part1(graph: Graph(Int), updates: List(Update)) {
   |> int.sum
 }
 
-fn fix_update(rules: Graph(Int), update: Update, validated: Update) -> Update {
-  case update {
-    [] -> list.reverse(validated)
-    [x, ..xs] -> {
-      let comes_after = x |> dict.get(rules, _) |> result.unwrap(set.new())
-
-      case validated |> list.any(set.contains(comes_after, _)) {
-        True ->
-          fix_update(
-            rules,
-            [
-              x,
-              ..list.append(
-                validated |> list.filter(not(equals(x))) |> list.reverse,
-                xs,
-              )
-            ],
-            [],
-          )
-        False -> fix_update(rules, xs, [x, ..validated])
-      }
+fn fix_update(rules: Set(Rule), update: Update) -> Update {
+  update
+  |> list.sort(by: fn(a, b) {
+    case set.contains(rules, #(a, b)) {
+      True -> order.Lt
+      False -> order.Gt
     }
-  }
+  })
 }
 
-fn part2(rules: Graph(Int), updates: List(Update)) {
+fn part2(graph: Graph(Int), rules: List(Rule), updates: List(Update)) {
+  let rules = set.from_list(rules)
+
   updates
-  |> list.filter(not(valid_update(rules, _, set.new())))
-  |> list.map(fix_update(rules, _, []))
+  |> list.filter(not(valid_update(graph, _, set.new())))
+  |> list.map(fix_update(rules, _))
   |> list.map(middle_element)
   |> int.sum
 }
@@ -120,5 +108,5 @@ pub fn main() {
   let graph = make_graph(rules)
 
   io.println("Part 1: " <> int.to_string(part1(graph, updates)))
-  io.println("Part 2: " <> int.to_string(part2(graph, updates)))
+  io.println("Part 2: " <> int.to_string(part2(graph, rules, updates)))
 }
