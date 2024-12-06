@@ -29,12 +29,12 @@ fn rotate90(dir: Direction) -> Direction {
   }
 }
 
-fn to_coord(dir: Direction) -> Point {
+fn add_dir(pt: Point, dir: Direction) -> Point {
   case dir {
-    Up -> #(-1, 0)
-    Down -> #(1, 0)
-    Right -> #(0, 1)
-    Left -> #(0, -1)
+    Up -> #(pt.0 - 1, pt.1)
+    Down -> #(pt.0 + 1, pt.1)
+    Right -> #(pt.0, pt.1 + 1)
+    Left -> #(pt.0, pt.1 - 1)
   }
 }
 
@@ -48,8 +48,7 @@ fn traverse(
     True -> visited
     False -> {
       let visited = visited |> set.insert(#(cur, dir))
-      let pt = to_coord(dir)
-      let next = #(cur.0 + pt.0, cur.1 + pt.1)
+      let next = add_dir(cur, dir)
       case grid.get2(map, next) {
         Error(_) -> visited
         Ok(".") | Ok("^") -> traverse(map, next, visited, dir)
@@ -77,8 +76,7 @@ fn traverse_extra(
     True -> True
     False -> {
       let visited = visited |> set.insert(#(cur, dir))
-      let pt = to_coord(dir)
-      let next = #(cur.0 + pt.0, cur.1 + pt.1)
+      let next = add_dir(cur, dir)
       case grid.get2(map, next) {
         Error(_) -> False
         _ if next == extra ->
@@ -92,8 +90,9 @@ fn traverse_extra(
 }
 
 fn part2(map: Grid(String), guard_pos: Point) {
-  let #(width, height) = grid.dimensions(map)
-  grid.coords(width, height)
+  traverse(map, guard_pos, set.new(), Up)
+  |> set.map(fn(x) { x.0 })
+  |> set.to_list
   |> list.filter(fn(coord) {
     case grid.get2(map, coord) {
       Ok(".") -> True
