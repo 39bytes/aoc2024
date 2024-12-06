@@ -92,13 +92,8 @@ fn traverse_extra(
 fn part2(map: Grid(String), guard_pos: Point) {
   traverse(map, guard_pos, set.new(), Up)
   |> set.map(fn(x) { x.0 })
+  |> set.delete(guard_pos)
   |> set.to_list
-  |> list.filter(fn(coord) {
-    case grid.get2(map, coord) {
-      Ok(".") -> True
-      _ -> False
-    }
-  })
   |> list.count(traverse_extra(map, guard_pos, set.new(), Up, _))
 }
 
