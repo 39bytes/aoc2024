@@ -3,11 +3,13 @@ import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
+import lib/function.{equals, not}
+import lib/grid.{type Grid, type Point}
 import simplifile
 
-fn parse() -> Result(String, _) {
-  use contents <- result.try(simplifile.read("src/day<num>/input"))
-  Ok(contents)
+fn parse() -> String {
+  let contents = simplifile.read("src/day<num>/input")
+  todo
 }
 
 fn part1() {
@@ -19,7 +21,7 @@ fn part2() {
 }
 
 pub fn main() {
-  let assert Ok(contents) = parse()
+  let contents = parse()
 
   io.println("Part 1: " <> int.to_string(part1()))
   io.println("Part 2: " <> int.to_string(part2()))
