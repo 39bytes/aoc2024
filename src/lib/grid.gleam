@@ -59,3 +59,11 @@ pub fn dimensions(grid: Grid(a)) -> #(Int, Int) {
 
   #(width, height)
 }
+
+pub fn point_add(a: Point, b: Point) -> Point {
+  #(a.0 + b.0, a.1 + b.1)
+}
+
+pub fn point_sub(a: Point, b: Point) -> Point {
+  #(a.0 - b.0, a.1 - b.1)
+}
