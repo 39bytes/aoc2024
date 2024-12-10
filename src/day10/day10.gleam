@@ -19,23 +19,19 @@ fn point_is(grid: Grid(Int), pt: Point, val: Int) {
   }
 }
 
-fn union_all(sets: List(Set(a))) -> Set(a) {
-  sets |> list.fold(set.new(), with: set.union)
-}
-
-fn dfs(grid: Grid(Int), cur: Point) -> Set(Point) {
+fn dfs(grid: Grid(Int), cur: Point) -> List(Point) {
   case grid.get2(grid, cur) {
     Ok(x) -> {
-      use <- bool.guard(x == 9, set.from_list([cur]))
+      use <- bool.guard(x == 9, [cur])
       grid.cardinals
       |> list.filter_map(fn(dir) {
         point_add(dir, cur)
         |> point_is(grid, _, x + 1)
         |> result.map(dfs(grid, _))
       })
-      |> union_all
+      |> list.flatten
     }
-    Error(Nil) -> set.new()
+    Error(Nil) -> []
   }
 }
 
@@ -48,29 +44,15 @@ fn trailheads(grid: Grid(Int)) {
 fn part1(grid: Grid(Int)) {
   trailheads(grid)
   |> list.map(dfs(grid, _))
-  |> list.map(set.size)
+  |> list.map(list.unique)
+  |> list.map(list.length)
   |> int.sum
-}
-
-fn dfs2(grid: Grid(Int), cur: Point) -> Int {
-  case grid.get2(grid, cur) {
-    Ok(x) -> {
-      use <- bool.guard(x == 9, 1)
-      grid.cardinals
-      |> list.filter_map(fn(dir) {
-        point_add(dir, cur)
-        |> point_is(grid, _, x + 1)
-        |> result.map(dfs2(grid, _))
-      })
-      |> int.sum
-    }
-    Error(Nil) -> 0
-  }
 }
 
 fn part2(grid: Grid(Int)) {
   trailheads(grid)
-  |> list.map(dfs2(grid, _))
+  |> list.map(dfs(grid, _))
+  |> list.map(list.length)
   |> int.sum
 }
 
