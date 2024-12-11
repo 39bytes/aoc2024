@@ -8,7 +8,7 @@ import lib/grid.{type Grid, type Point}
 import simplifile
 
 fn parse() -> String {
-  let contents = simplifile.read("src/day<num>/input")
+  let assert Ok(contents) = simplifile.read("src/day<num>/input")
   todo
 }
 
