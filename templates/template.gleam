@@ -5,6 +5,7 @@ import gleam/result
 import gleam/string
 import lib/function.{equals, not}
 import lib/grid.{type Grid, type Point}
+import pocket_watch
 import simplifile
 
 fn parse() -> String {
@@ -23,6 +24,9 @@ fn part2() {
 pub fn main() {
   let contents = parse()
 
-  io.println("Part 1: " <> int.to_string(part1()))
-  io.println("Part 2: " <> int.to_string(part2()))
+  let p1 = fn() { part1() }
+  let p2 = fn() { part2() }
+
+  io.println(int.to_string(pocket_watch.simple("Part 1", p1)))
+  io.println(int.to_string(pocket_watch.simple("Part 2", p2)))
 }

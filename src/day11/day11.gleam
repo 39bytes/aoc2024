@@ -4,6 +4,7 @@ import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
+import pocket_watch
 import rememo/memo
 import simplifile
 
@@ -53,6 +54,10 @@ pub fn main() {
   let nums = parse()
 
   use cache <- memo.create()
-  io.println("Part 1: " <> int.to_string(part1(nums, cache)))
-  io.println("Part 2: " <> int.to_string(part2(nums, cache)))
+
+  let p1 = fn() { part1(nums, cache) }
+  let p2 = fn() { part2(nums, cache) }
+
+  io.println(int.to_string(pocket_watch.simple("Part 1", p1)))
+  io.println(int.to_string(pocket_watch.simple("Part 2", p2)))
 }
