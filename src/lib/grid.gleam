@@ -11,7 +11,7 @@ pub type Grid(a) =
   Array(Array(a))
 
 /// The 4 cardinal directions.
-pub const cardinals = [#(1, 0), #(-1, 0), #(0, 1), #(0, -1)]
+pub const cardinals = [#(-1, 0), #(0, 1), #(1, 0), #(0, -1)]
 
 /// The 4 ordinal directions.
 pub const diagonals = [#(1, -1), #(-1, -1), #(1, 1), #(-1, 1)]
@@ -58,6 +58,10 @@ pub fn dimensions(grid: Grid(a)) -> #(Int, Int) {
     glearray.get(grid, 0) |> result.unwrap(glearray.new()) |> glearray.length
 
   #(width, height)
+}
+
+pub fn adj4(pt: Point) -> List(Point) {
+  cardinals |> list.map(point_add(pt, _))
 }
 
 pub fn point_add(a: Point, b: Point) -> Point {
