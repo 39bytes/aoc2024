@@ -71,3 +71,7 @@ pub fn point_add(a: Point, b: Point) -> Point {
 pub fn point_sub(a: Point, b: Point) -> Point {
   #(a.0 - b.0, a.1 - b.1)
 }
+
+pub fn point_mul(a: Point, c: Int) -> Point {
+  #(a.0 * c, a.1 * c)
+}
