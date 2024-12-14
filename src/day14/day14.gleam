@@ -86,15 +86,24 @@ fn display(robots: List(Robot)) {
     }
   }
 
-  grid |> list.map(string.join(_, "")) |> string.join("\n")
+  grid |> list.map(string.join(_, ""))
+}
+
+fn has_strip(lines: List(String)) {
+  lines |> list.any(string.contains(_, "################"))
 }
 
 fn part2(robots: List(Robot), acc: Int) {
-  use <- bool.guard(acc == 7572, return: 7572)
-  let robots = robots |> list.map(move(_, 1))
-  io.println(display(robots))
-  io.println(int.to_string(acc))
-  part2(robots, acc + 1)
+  let grid = display(robots)
+  case has_strip(grid) {
+    True -> {
+      io.println(grid |> string.join("\n"))
+      acc
+    }
+    False -> {
+      part2(list.map(robots, move(_, 1)), acc + 1)
+    }
+  }
 }
 
 pub fn main() {
