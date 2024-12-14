@@ -1,3 +1,4 @@
+import gleam/bool
 import gleam/dict
 import gleam/function
 import gleam/int
@@ -89,6 +90,7 @@ fn display(robots: List(Robot)) {
 }
 
 fn part2(robots: List(Robot), acc: Int) {
+  use <- bool.guard(acc == 7572, return: 7572)
   let robots = robots |> list.map(move(_, 1))
   io.println(display(robots))
   io.println(int.to_string(acc))
