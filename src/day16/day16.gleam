@@ -146,7 +146,6 @@ fn part2(maze: Grid(String), start: Point) {
 
 pub fn main() {
   let #(maze, start) = parse()
-  io.debug(start)
 
   let p1 = fn() { part1(maze, start) }
   let p2 = fn() { part2(maze, start) }
