@@ -3,7 +3,7 @@ import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
-import lib/function.{equals}
+import lib/func.{equals}
 import lib/grid.{type Grid, type Point}
 import simplifile
 

@@ -7,7 +7,7 @@ import gleam/order
 import gleam/result
 import gleam/set.{type Set}
 import gleam/string
-import lib/function.{equals, not}
+import lib/func.{equals, not}
 import simplifile
 
 type Rule =

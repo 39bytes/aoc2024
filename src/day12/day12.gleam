@@ -3,7 +3,7 @@ import gleam/int
 import gleam/io
 import gleam/list
 import gleam/set.{type Set}
-import lib/function.{equals, not}
+import lib/func.{equals, not}
 import lib/grid.{type Grid, type Point, point_add, point_sub}
 import pocket_watch
 import simplifile
