@@ -4,7 +4,6 @@ import gleam/list
 import gleam/result
 import gleam/string
 import glearray.{type Array}
-import lib/func
 import pocket_watch
 import simplifile
 
@@ -144,83 +143,67 @@ fn part1(cpu: Cpu, program: Array(Int)) -> String {
   }
 }
 
-// Bst(A),        B = A & 0b111 
-// Bxl(2),        B = B ^ 0b010      B = B ^ 0b010
-// Cdv(B),        C = A >> B         A = C << B
-// Bxl(3),        B = B ^ 0b011      B = B ^ 0b011  
-// Bxc,           B = B ^ C          B = 2 ^ C
-// Out(B),        output B           B = 2
-// Adv(Lit(3)),   A = A >> 3         A = 0
+// Bst(A),        B = A & 0b111
+// Bxl(2),        B = B ^ 0b010
+// Cdv(B),        C = A >> B   
+// Bxl(3),        B = B ^ 0b011
+// Bxc,           B = B ^ C    
+// Out(B),        output B     
+// Adv(Lit(3)),   A = A >> 3   
 // Jnz(0)         loop
 
-// 000 AAA AAA AAA AAA ...
-// B = bottom 3 bits of A with middle flipped
-// bottom 3 bits of A = B with middle flipped
-
-// Adv(Lit(3))    A = A >> 3
-// Out(A)         
-// Jnz(0)         
-
-// A = DEF GHI JKL
-// B = JKL
-// B = JK'L
-// C = 
-
-fn part2(program: Array(Int)) {
-  let program = program |> glearray.to_list |> list.reverse
-
-  let #(a, _) = {
-    use #(a, c), b <- list.fold(program, #(0, 0))
-    let b = b |> int.bitwise_exclusive_or(c) |> int.bitwise_exclusive_or(0b11)
-    let a = a |> int.bitwise_shift_left(3) |> int.bitwise_exclusive_or(0b010)
-    let c = c |> int.bitwise_shift_left(b)
-    io.println("A: " <> int.to_base2(a))
-    io.println("B: " <> int.to_base2(b))
-    io.println("C: " <> int.to_base2(c))
-
-    #(a, c)
+fn run_til_output(cpu: Cpu, program: Array(Int)) -> Int {
+  case run(cpu, program) {
+    #(Cpu(output: [x], ..), _) -> x
+    #(cpu, False) -> run_til_output(cpu, program)
+    #(_, True) -> panic
   }
-  a
 }
 
-// B = 0 => B = C
-// A >> B ^ ==
-// B ^ 0b011 == C
+fn dfs(cpu: Cpu, program: Array(Int), targets: List(Int)) -> Result(Int, Nil) {
+  case targets {
+    [] -> Ok(cpu.a)
+    [target, ..targets] -> {
+      case solve_iter(cpu, program, target) {
+        [] -> Error(Nil)
+        possible ->
+          list.find_map(possible, fn(bits) {
+            dfs(
+              Cpu(
+                ..cpu,
+                a: cpu.a |> int.bitwise_shift_left(3) |> int.bitwise_or(bits),
+              ),
+              program,
+              targets,
+            )
+          })
+      }
+    }
+  }
+}
 
-// bottom 3 bits of A, flip the middle one
+fn solve_iter(cpu: Cpu, program: Array(Int), target: Int) -> List(Int) {
+  list.range(0, 7)
+  |> list.filter(fn(bits) {
+    run_til_output(
+      Cpu(..cpu, a: cpu.a |> int.bitwise_shift_left(3) |> int.bitwise_or(bits)),
+      program,
+    )
+    == target
+  })
+}
 
-// B = (A & 0b111) ^ 0b010
-// B = (A & 0b111) ^ 0b001
-
-// B = (A & 0b111) & 0b101 | ~(A & 0b111) & 0b010   XOR definition
-// B = A & 0b101 | (~A | 0b000) & 0b010             De Morgan's laws
-// B = A & 0b101 | ~A & 0b010
-
-// second bit set -> not set
-// second bit unset -> set
-
-// B = (A & 0b111) ^ 0b010
-// B = ((A & 0b111) | 0b010) & ~((A & 0b111) & 0b010)
-// B = ((A & 0b111) | 0b010) & ~(A & 0b010)
-// B = ((A & 0b111) | 0b010) & 
-
-// A = .... ..QR STUV WXYZ
-
-// B = 2         // B = XYZ
-// 2 = B ^ C     // 
-
-// 0b11100101011000000
-
-// Out = 0
-// A = (A | 0) << 3
-// A = (A | 3) << 3
-// A = (A | 
+fn part2(cpu: Cpu, program: Array(Int)) {
+  let targets = program |> glearray.to_list |> list.reverse
+  let assert Ok(ans) = dfs(Cpu(..cpu, a: 0), program, targets)
+  ans
+}
 
 pub fn main() {
   let #(cpu, program) = parse()
 
   let p1 = fn() { part1(cpu, program) }
-  let p2 = fn() { part2(program) }
+  let p2 = fn() { part2(cpu, program) }
 
   io.println(pocket_watch.simple("Part 1", p1))
   io.println(int.to_string(pocket_watch.simple("Part 2", p2)))
