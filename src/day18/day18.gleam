@@ -95,7 +95,8 @@ fn iter(rest: List(Point), cur_walls: Set(Point)) {
 }
 
 fn part2(walls: List(Point)) {
-  let assert Ok(pt) = iter(walls, set.new())
+  let #(start, rest) = list.split(walls, 1024)
+  let assert Ok(pt) = iter(rest, set.from_list(start))
   pt
 }
 
