@@ -1,15 +1,12 @@
 import gleam/bool
 import gleam/deque
 import gleam/dict.{type Dict}
-import gleam/function
 import gleam/int
 import gleam/io
 import gleam/list
 import gleam/result
 import gleam/set.{type Set}
-import gleam/string
-import lib/func.{equals, not}
-import lib/grid.{type Grid, type Point, point_add, point_mul}
+import lib/grid.{type Grid, type Point}
 import pocket_watch
 import simplifile
 
@@ -100,54 +97,41 @@ fn bfs(
   }
 }
 
-fn part1(track: Grid(String), start: Point) {
-  let path = dfs(track, start, #(-1, -1), 0, dict.new())
-
-  path
-  |> dict.to_list
-  |> list.flat_map(fn(entry) {
-    bfs(
-      track,
-      entry.0,
-      2,
-      path,
-      deque.from_list([#(entry.0, 0)]),
-      set.new(),
-      [],
-    )
-  })
-  |> list.count(fn(x) { x >= 100 })
-}
-
-fn part2(track: Grid(String), start: Point) {
-  let path = dfs(track, start, #(-1, -1), 0, dict.new())
-
-  path
-  |> dict.to_list
-  |> list.flat_map(fn(entry) {
-    bfs(
-      track,
-      entry.0,
-      20,
-      path,
-      deque.from_list([#(entry.0, 0)]),
-      set.new(),
-      [],
-    )
-  })
-  |> list.count(fn(x) { x >= 100 })
-}
-
-pub fn main() {
-  let track = parse()
-
+fn solve(track: Grid(String), max_cheat_time: Int) {
   let #(width, height) = grid.dimensions(track)
   let assert Ok(start) =
     grid.coords(width, height)
     |> list.find(fn(pt) { grid.get2(track, pt) |> result.unwrap("#") == "S" })
+  let path = dfs(track, start, #(-1, -1), 0, dict.new())
 
-  let p1 = fn() { part1(track, start) }
-  let p2 = fn() { part2(track, start) }
+  path
+  |> dict.to_list
+  |> list.flat_map(fn(entry) {
+    bfs(
+      track,
+      entry.0,
+      max_cheat_time,
+      path,
+      deque.from_list([#(entry.0, 0)]),
+      set.new(),
+      [],
+    )
+  })
+  |> list.count(fn(x) { x >= 100 })
+}
+
+fn part1(track: Grid(String)) {
+  solve(track, 2)
+}
+
+fn part2(track: Grid(String)) {
+  solve(track, 20)
+}
+
+pub fn main() {
+  let track = parse()
+  let p1 = fn() { part1(track) }
+  let p2 = fn() { part2(track) }
 
   io.println(int.to_string(pocket_watch.simple("Part 1", p1)))
   io.println(int.to_string(pocket_watch.simple("Part 2", p2)))
