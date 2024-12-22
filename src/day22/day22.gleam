@@ -1,3 +1,4 @@
+import gleam/dict
 import gleam/int
 import gleam/io
 import gleam/list
@@ -28,11 +29,10 @@ fn prune(num) {
   num |> int.bitwise_and(0xFFFFFF)
 }
 
-fn calc_next(num: Int) {
-  num
-  |> fn(x) { mix_and_prune(x, x |> int.bitwise_shift_left(6)) }
-  |> fn(x) { mix_and_prune(x, x |> int.bitwise_shift_right(5)) }
-  |> fn(x) { mix_and_prune(x, x |> int.bitwise_shift_left(11)) }
+fn calc_next(num) {
+  let x = mix_and_prune(num, num |> int.bitwise_shift_left(6))
+  let x = mix_and_prune(x, x |> int.bitwise_shift_right(5))
+  mix_and_prune(x, x |> int.bitwise_shift_left(11))
 }
 
 fn part1(nums: List(Int)) {
@@ -44,8 +44,31 @@ fn part1(nums: List(Int)) {
   |> int.sum
 }
 
+fn solve_num(num) {
+  let seq =
+    yielder.iterate(num, calc_next) |> yielder.take(2001) |> yielder.to_list
+
+  let last_digits = seq |> list.map(fn(x) { x % 10 })
+  let assert [_, ..tail] = last_digits
+  let diffs = list.map2(tail, last_digits, int.subtract)
+  let windows = list.window(diffs, 4)
+
+  use sells, #(digit, window) <- list.fold(
+    list.zip(last_digits |> list.drop(4), windows),
+    dict.new(),
+  )
+  case dict.get(sells, window) {
+    Error(Nil) -> sells |> dict.insert(window, digit)
+    _ -> sells
+  }
+}
+
 fn part2(nums: List(Int)) {
-  todo
+  nums
+  |> list.map(solve_num)
+  |> list.fold(dict.new(), fn(acc, x) { dict.combine(acc, x, int.add) })
+  |> dict.values
+  |> list.fold(0, int.max)
 }
 
 pub fn main() {
