@@ -59,6 +59,17 @@ fn find_3_cycle(
   }
 }
 
+fn part1(input: Graph) {
+  input
+  |> dict.keys
+  |> list.filter_map(find_3_cycle(input, _, "", []))
+  |> list.flatten
+  |> list.filter(fn(x) { list.any(x, string.starts_with(_, "t")) })
+  |> list.map(set.from_list)
+  |> set.from_list
+  |> set.size
+}
+
 fn find_cliques(
   graph: Dict(String, Set(String)),
   r: Set(String),
